@@ -1,0 +1,8 @@
+{
+  "name": "Sprout (움트다)",
+  "description": "A zero-pressure growth companion helping you take micro-steps from the shadows into the sunlight.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
