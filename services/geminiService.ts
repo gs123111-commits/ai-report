@@ -1,13 +1,23 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { ShredderResponse, ExperienceTranslation, SocialScriptResponse, JobBuff, JobCoachingResponse } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// API 키가 없어도 앱이 렌더링될 수 있도록 빈 문자열로 fallback 처리
+// (실제 API 호출 시에는 오류가 발생하겠지만, 화면이 하얗게 뜨는 것은 방지)
+const apiKey = process.env.API_KEY || '';
+const ai = new GoogleGenAI({ apiKey });
 
 // Model configuration
 const TEXT_MODEL = 'gemini-2.5-flash';
 
 export const generateComfortingResponse = async (worryText: string): Promise<ShredderResponse> => {
+  if (!apiKey) {
+    console.warn("API Key is missing. Returning fallback response.");
+    return {
+      comfortMessage: "API 키가 설정되지 않았습니다. 설정 후 다시 시도해주세요.",
+      actionItem: "환경 변수 확인하기"
+    };
+  }
+
   try {
     const response = await ai.models.generateContent({
       model: TEXT_MODEL,
@@ -41,6 +51,12 @@ export const generateComfortingResponse = async (worryText: string): Promise<Shr
 };
 
 export const translateExperience = async (rawExperience: string): Promise<ExperienceTranslation[]> => {
+  if (!apiKey) {
+    return [
+      { skill: "API 키 미설정", description: "Vercel 환경변수에서 API_KEY를 설정해주세요." }
+    ];
+  }
+
   try {
     const response = await ai.models.generateContent({
       model: TEXT_MODEL,
@@ -66,7 +82,6 @@ export const translateExperience = async (rawExperience: string): Promise<Experi
     const jsonStr = response.text;
     if (!jsonStr) throw new Error("No response from AI");
     const result = JSON.parse(jsonStr) as ExperienceTranslation[];
-    // Append original text for context if needed, though not returned by AI
     return result.map(r => ({ ...r, originalText: rawExperience }));
 
   } catch (error) {
@@ -78,6 +93,13 @@ export const translateExperience = async (rawExperience: string): Promise<Experi
 };
 
 export const generateSocialScript = async (situation: string): Promise<SocialScriptResponse> => {
+  if (!apiKey) {
+    return {
+      script: "API 키가 설정되지 않아 대본을 생성할 수 없습니다.",
+      tips: "Vercel 설정을 확인해주세요."
+    };
+  }
+
   try {
     const response = await ai.models.generateContent({
       model: TEXT_MODEL,
@@ -108,7 +130,7 @@ export const generateSocialScript = async (situation: string): Promise<SocialScr
 };
 
 export const getJobBuffs = async (): Promise<JobBuff[]> => {
-  // Simulated dynamic response based on "Resting" context
+  // Simulated dynamic response
   return [
     { name: "회복 탄력성", score: 95, description: "긴 휴식을 통해 번아웃을 예방할 줄 아는 능력" },
     { name: "깊은 몰입", score: 88, description: "좋아하는 것에 깊게 파고드는 집중력" },
@@ -117,6 +139,14 @@ export const getJobBuffs = async (): Promise<JobBuff[]> => {
 };
 
 export const generateJobCoaching = async (jobTitle: string, successfulSpecs: string[]): Promise<JobCoachingResponse> => {
+  if (!apiKey) {
+    return {
+      encouragement: "API 키가 필요해요.",
+      gapAnalysis: "AI 코칭을 받으려면 API 키를 설정해주세요.",
+      roadmap: [{ step: "설정", action: "Vercel 환경변수 등록" }]
+    };
+  }
+
   try {
     const response = await ai.models.generateContent({
       model: TEXT_MODEL,
